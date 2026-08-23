@@ -28,7 +28,7 @@ X_HEIGHT = 520
 ASCENDER_HEIGHT = CAP_HEIGHT
 DESCENDER_HEIGHT = DESCENT
 DEFAULT_ADVANCE = 620
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 Point = tuple[float, float]
 PathStroke = list[Point]
@@ -116,7 +116,7 @@ LOWER: dict[str, GlyphShape] = {
     "j": shape([[(C, 370), (C, -80), (220, DESCENDER_HEIGHT), (L, DESCENDER_HEIGHT)]], advance=380, dots=[(C, 500)]),
     "k": shape([
         [(L, 0), (L, ASCENDER_HEIGHT)],
-        [(R, ASCENDER_HEIGHT), (L, 250), (R, 0)],
+        [(R, X_HEIGHT), (L, 260), (R, 0)],
     ], advance=550),
     "l": shape([[(C, ASCENDER_HEIGHT), (C, 90), (380, 0), (R, 0)]], advance=420),
     "m": shape([
@@ -333,7 +333,7 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         metrics[name] = (advance, left_side_bearing)
         cmap[ord(character)] = name
 
-    style = {100: "Light", 300: "Regular", 700: "Bold"}[weight]
+    style = {100: "Thin", 300: "Light", 500: "Regular", 700: "Bold"}[weight]
     font = FontBuilder(UPM, isTTF=True)
     font.setupGlyphOrder(order)
     font.setupCharacterMap(cmap)
@@ -365,7 +365,7 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         usWeightClass=weight,
         sxHeight=X_HEIGHT,
         sCapHeight=CAP_HEIGHT,
-        fsSelection=0x40 if weight == 300 else 0,
+        fsSelection=0x40 if weight == 500 else 0,
         achVendID="MRTZ",
     )
     font.setupPost(underlinePosition=-120, underlineThickness=max(18, int(stroke_width)))
@@ -379,9 +379,9 @@ def make_designspace(master_paths: dict[int, Path]) -> Path:
     axis.name = "Weight"
     axis.tag = "wght"
     axis.minimum = 100
-    axis.default = 300
+    axis.default = 500
     axis.maximum = 700
-    axis.map = [(100, 100), (300, 300), (700, 700)]
+    axis.map = [(100, 100), (300, 300), (500, 500), (700, 700)]
     document.addAxis(axis)
 
     for weight, path in master_paths.items():
@@ -390,8 +390,8 @@ def make_designspace(master_paths: dict[int, Path]) -> Path:
         source.path = str(path)
         source.location = {"Weight": weight}
         source.familyName = "Moriatz Sans"
-        source.styleName = {100: "Light", 300: "Regular", 700: "Bold"}[weight]
-        if weight == 300:
+        source.styleName = {100: "Thin", 300: "Light", 500: "Regular", 700: "Bold"}[weight]
+        if weight == 500:
             source.copyInfo = True
             source.copyLib = True
             source.copyFeatures = True
@@ -452,9 +452,9 @@ def render_specimen(static_font: Path, variable_woff2: Path) -> None:
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
   <style>
     @font-face {{ font-family: "Moriatz Sans Variable"; src: url(data:font/woff2;base64,{encoded}) format("woff2"); font-weight: 100 700; }}
-    .brand {{ font: 300 230px "Moriatz Sans Variable"; letter-spacing: 30px; fill: #f6f6f2; text-anchor: middle; }}
-    .labs {{ font: 300 230px "Moriatz Sans Variable"; letter-spacing: 52px; fill: #f6f6f2; text-anchor: middle; }}
-    .meta {{ font: 300 42px "Moriatz Sans Variable"; letter-spacing: 10px; fill: #a3a3a3; text-anchor: middle; }}
+    .brand {{ font: 500 230px "Moriatz Sans Variable"; letter-spacing: 30px; fill: #f6f6f2; text-anchor: middle; }}
+    .labs {{ font: 500 230px "Moriatz Sans Variable"; letter-spacing: 52px; fill: #f6f6f2; text-anchor: middle; }}
+    .meta {{ font: 500 42px "Moriatz Sans Variable"; letter-spacing: 10px; fill: #a3a3a3; text-anchor: middle; }}
   </style>
   <rect width="1600" height="900" fill="#050505"/>
   <text class="brand" x="800" y="390">MORIATZ</text>
@@ -482,7 +482,7 @@ def write_specimen_html() -> None:
     .deck { max-width: 24ch; margin: 5rem 0; font-size: clamp(2.5rem, 7vw, 7rem); line-height: .95; }
     .axis { display: grid; gap: 2rem; padding-top: 4rem; border-top: 1px solid #333; }
     .axis p { margin: 0; font-size: clamp(2rem, 5vw, 5rem); line-height: 1; }
-    .hairline { font-weight: 100; } .regular { font-weight: 300; } .bold { font-weight: 700; }
+    .hairline { font-weight: 100; } .signature { font-weight: 300; } .dense { font-weight: 500; } .bold { font-weight: 700; }
     small { color: #999; letter-spacing: .12em; text-transform: uppercase; }
   </style>
 </head>
@@ -493,7 +493,8 @@ def write_specimen_html() -> None:
     <p class="display deck">Thin ideas. Sharp systems. Useful software.</p>
     <section class="display axis" aria-label="Weight specimens">
       <p class="hairline">100 — Fine</p>
-      <p class="regular">300 — Signature</p>
+      <p class="signature">300 — Signature</p>
+      <p class="dense">500 — Dense</p>
       <p class="bold">700 — Structural</p>
     </section>
   </main>
@@ -510,9 +511,9 @@ def main() -> None:
     FILES.mkdir(parents=True)
     DOCS.mkdir(parents=True, exist_ok=True)
 
-    # Dark enough to survive common UI sizes while preserving the tapered,
-    # skeletal construction. Regular is 2.8x the original 20-unit master.
-    master_specs = {100: 32.0, 300: 56.0, 700: 96.0}
+    # Dense is the default interface master while the lighter Signature master
+    # remains available on the continuous axis.
+    master_specs = {100: 32.0, 300: 56.0, 500: 76.0, 700: 96.0}
     master_paths: dict[int, Path] = {}
     for weight, stroke_width in master_specs.items():
         path = BUILD / f"MoriatzSans-{weight}.ttf"
@@ -531,7 +532,7 @@ def main() -> None:
     webfont.save(variable_woff2)
 
     static_regular = FILES / "MoriatzSans-Regular.ttf"
-    shutil.copy2(master_paths[300], static_regular)
+    shutil.copy2(master_paths[500], static_regular)
 
     write_css()
     write_specimen_html()
