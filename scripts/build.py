@@ -213,7 +213,7 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         metrics[name] = (shapes[character][0], 0)
         cmap[ord(character)] = name
 
-    style = {100: "Hairline", 300: "Regular", 700: "Bold"}[weight]
+    style = {100: "Light", 300: "Regular", 700: "Bold"}[weight]
     font = FontBuilder(UPM, isTTF=True)
     font.setupGlyphOrder(order)
     font.setupCharacterMap(cmap)
@@ -224,13 +224,13 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         {
             "familyName": "Moriatz Sans",
             "styleName": style,
-            "uniqueFontIdentifier": f"Moriatz Sans {style} 0.1.0",
+            "uniqueFontIdentifier": f"Moriatz Sans {style} 0.2.0",
             "fullName": f"Moriatz Sans {style}",
             "psName": f"MoriatzSans-{style}",
-            "version": "Version 0.1.0",
+            "version": "Version 0.2.0",
             "manufacturer": "Moriatz Labs",
             "designer": "Moriatz Labs",
-            "description": "An ultra-thin, tapered-stroke system typeface for Moriatz Labs.",
+            "description": "A darkened, tapered-stroke system typeface for Moriatz Labs.",
             "vendorURL": "https://moriatz.com",
             "licenseDescription": "Licensed under the SIL Open Font License, Version 1.1.",
             "licenseInfoURL": "https://openfontlicense.org",
@@ -270,7 +270,7 @@ def make_designspace(master_paths: dict[int, Path]) -> Path:
         source.path = str(path)
         source.location = {"Weight": weight}
         source.familyName = "Moriatz Sans"
-        source.styleName = {100: "Hairline", 300: "Regular", 700: "Bold"}[weight]
+        source.styleName = {100: "Light", 300: "Regular", 700: "Bold"}[weight]
         if weight == 300:
             source.copyInfo = True
             source.copyLib = True
@@ -287,9 +287,9 @@ def set_variable_names(font: TTFont) -> None:
     for name_id, value in {
         1: "Moriatz Sans Variable",
         2: "Regular",
-        3: "Moriatz Sans Variable 0.1.0",
+        3: "Moriatz Sans Variable 0.2.0",
         4: "Moriatz Sans Variable",
-        5: "Version 0.1.0",
+        5: "Version 0.2.0",
         6: "MoriatzSans-Variable",
     }.items():
         names.setName(value, name_id, 3, 1, 0x409)
@@ -357,7 +357,7 @@ def write_specimen_html() -> None:
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { width: min(100% - 2rem, 90rem); margin: auto; padding: 7rem 0; }
-    .display { font-family: "Moriatz Sans Variable", sans-serif; font-weight: 300; letter-spacing: .08em; }
+    .display { font-family: "Moriatz Sans Variable", sans-serif; font-weight: 400; letter-spacing: .08em; }
     h1 { max-width: 8ch; margin: 0; font-size: clamp(5rem, 17vw, 15rem); line-height: .82; }
     .deck { max-width: 24ch; margin: 5rem 0; font-size: clamp(2.5rem, 7vw, 7rem); line-height: .95; }
     .axis { display: grid; gap: 2rem; padding-top: 4rem; border-top: 1px solid #333; }
@@ -372,9 +372,9 @@ def write_specimen_html() -> None:
     <h1 class="display">Moriatz Labs</h1>
     <p class="display deck">Thin ideas. Sharp systems. Useful software.</p>
     <section class="display axis" aria-label="Weight specimens">
-      <p class="hairline">100 — Toothpick</p>
+      <p class="hairline">100 — Fine</p>
       <p class="regular">300 — Signature</p>
-      <p class="bold">700 — Still skeletal</p>
+      <p class="bold">700 — Structural</p>
     </section>
   </main>
 </body>
@@ -390,7 +390,9 @@ def main() -> None:
     FILES.mkdir(parents=True)
     DOCS.mkdir(parents=True, exist_ok=True)
 
-    master_specs = {100: 12.0, 300: 20.0, 700: 38.0}
+    # Dark enough to survive common UI sizes while preserving the tapered,
+    # skeletal construction. Regular is 2.8x the original 20-unit master.
+    master_specs = {100: 32.0, 300: 56.0, 700: 96.0}
     master_paths: dict[int, Path] = {}
     for weight, stroke_width in master_specs.items():
         path = BUILD / f"MoriatzSans-{weight}.ttf"
