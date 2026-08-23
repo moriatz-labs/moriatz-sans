@@ -34,7 +34,7 @@ def main() -> None:
     }
     assert "Moriatz Sans Variable" in family_names
     version_names = {record.toUnicode() for record in font["name"].names if record.nameID == 5}
-    assert "Version 0.4.1" in version_names
+    assert "Version 0.5.0" in version_names
 
     regular = TTFont(REGULAR)
     regular_cmap = regular.getBestCmap()
@@ -42,6 +42,7 @@ def main() -> None:
     for character in "ABCDEFGHIJKLMNOPRSTUVWXYZ":
         glyph = glyf[regular_cmap[ord(character)]]
         assert (glyph.yMin, glyph.yMax) == (0, 720), (character, glyph.yMin, glyph.yMax)
+    assert (glyf[regular_cmap[ord("Q")]].yMin, glyf[regular_cmap[ord("Q")]].yMax) == (-220, 720)
     for character in "acemnorsuvwxz":
         glyph = glyf[regular_cmap[ord(character)]]
         assert (glyph.yMin, glyph.yMax) == (0, 520), (character, glyph.yMin, glyph.yMax)
@@ -50,9 +51,9 @@ def main() -> None:
         assert (glyph.yMin, glyph.yMax) == (0, 720), (character, glyph.yMin, glyph.yMax)
     for character in "gpqy":
         glyph = glyf[regular_cmap[ord(character)]]
-        assert (glyph.yMin, glyph.yMax) == (-180, 520), (character, glyph.yMin, glyph.yMax)
+        assert (glyph.yMin, glyph.yMax) == (-220, 520), (character, glyph.yMin, glyph.yMax)
     assert (glyf[regular_cmap[ord("i")]].yMin, glyf[regular_cmap[ord("i")]].yMax) == (0, 620)
-    assert (glyf[regular_cmap[ord("j")]].yMin, glyf[regular_cmap[ord("j")]].yMax) == (-180, 620)
+    assert (glyf[regular_cmap[ord("j")]].yMin, glyf[regular_cmap[ord("j")]].yMax) == (-220, 620)
     assert (glyf[regular_cmap[ord("t")]].yMin, glyf[regular_cmap[ord("t")]].yMax) == (0, 610)
     h_glyph = glyf[regular_cmap[ord("h")]]
     n_glyph = glyf[regular_cmap[ord("n")]]
