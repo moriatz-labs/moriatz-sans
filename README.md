@@ -2,7 +2,7 @@
 
 Moriatz Sans is Moriatz Labs' original variable system typeface. Its letterforms are assembled from tapered geometric strokes: deliberately skeletal, technical, and "toothpick" in character, but dark enough to remain crisp at interface sizes.
 
-Strawn uses Moriatz Sans as its complete typographic voice across interface controls, body copy, headings, code, data, and brand moments. Version 0.2 increases the Regular stroke width by 2.8× while retaining the original tapered construction.
+Strawn uses Moriatz Sans as its complete typographic voice across interface controls, body copy, headings, code, data, and brand moments. Version 0.3 retains the darker tapered construction and normalizes cap-height, x-height, baseline, and sidebearing alignment across every master.
 
 ## Install
 

@@ -9,6 +9,7 @@ from fontTools.designspaceLib import AxisDescriptor, DesignSpaceDocument, Source
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import build as build_variable
 from PIL import Image, ImageDraw, ImageFont
 
@@ -25,6 +26,7 @@ DESCENT = -220
 CAP_HEIGHT = 720
 X_HEIGHT = 520
 DEFAULT_ADVANCE = 620
+VERSION = "0.3.0"
 
 Point = tuple[float, float]
 PathStroke = list[Point]
@@ -188,6 +190,32 @@ def build_glyph(shape_data: GlyphShape, stroke_width: float):
     return pen.glyph()
 
 
+def align_glyph(glyph, advance: int, vertical_bounds: tuple[int, int] | None = None):
+    """Center sidebearings and normalize declared vertical alignment zones."""
+    if not glyph.coordinates:
+        return glyph
+
+    coordinates = list(glyph.coordinates)
+    x_min = min(point[0] for point in coordinates)
+    x_max = max(point[0] for point in coordinates)
+    x_offset = (advance - (x_max - x_min)) / 2 - x_min
+
+    if vertical_bounds is None:
+        transformed = [(round(x + x_offset), round(y)) for x, y in coordinates]
+    else:
+        target_min, target_max = vertical_bounds
+        y_min = min(point[1] for point in coordinates)
+        y_max = max(point[1] for point in coordinates)
+        y_scale = (target_max - target_min) / (y_max - y_min)
+        transformed = [
+            (round(x + x_offset), round(target_min + (y - y_min) * y_scale))
+            for x, y in coordinates
+        ]
+
+    glyph.coordinates = GlyphCoordinates(transformed)
+    return glyph
+
+
 def glyph_name(character: str) -> str:
     return f"uni{ord(character):04X}"
 
@@ -209,8 +237,19 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
 
     for character in characters:
         name = glyph_name(character)
-        glyphs[name] = build_glyph(shapes[character], stroke_width)
-        metrics[name] = (shapes[character][0], 0)
+        advance = shapes[character][0]
+        vertical_bounds = None
+        if character in UPPER:
+            vertical_bounds = (-55, CAP_HEIGHT) if character == "Q" else (0, CAP_HEIGHT)
+        elif character.islower():
+            vertical_bounds = (-40, X_HEIGHT) if character == "q" else (0, X_HEIGHT)
+        elif character in DIGITS:
+            vertical_bounds = (0, CAP_HEIGHT)
+
+        glyph = align_glyph(build_glyph(shapes[character], stroke_width), advance, vertical_bounds)
+        glyphs[name] = glyph
+        left_side_bearing = min((point[0] for point in glyph.coordinates), default=0)
+        metrics[name] = (advance, left_side_bearing)
         cmap[ord(character)] = name
 
     style = {100: "Light", 300: "Regular", 700: "Bold"}[weight]
@@ -224,10 +263,10 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         {
             "familyName": "Moriatz Sans",
             "styleName": style,
-            "uniqueFontIdentifier": f"Moriatz Sans {style} 0.2.0",
+            "uniqueFontIdentifier": f"Moriatz Sans {style} {VERSION}",
             "fullName": f"Moriatz Sans {style}",
             "psName": f"MoriatzSans-{style}",
-            "version": "Version 0.2.0",
+            "version": f"Version {VERSION}",
             "manufacturer": "Moriatz Labs",
             "designer": "Moriatz Labs",
             "description": "A darkened, tapered-stroke system typeface for Moriatz Labs.",
@@ -287,9 +326,9 @@ def set_variable_names(font: TTFont) -> None:
     for name_id, value in {
         1: "Moriatz Sans Variable",
         2: "Regular",
-        3: "Moriatz Sans Variable 0.2.0",
+        3: f"Moriatz Sans Variable {VERSION}",
         4: "Moriatz Sans Variable",
-        5: "Version 0.2.0",
+        5: f"Version {VERSION}",
         6: "MoriatzSans-Variable",
     }.items():
         names.setName(value, name_id, 3, 1, 0x409)
