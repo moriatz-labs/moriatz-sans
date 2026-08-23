@@ -19,14 +19,14 @@ import "moriatz-sans";
 ```css
 .display-type {
   font-family: "Moriatz Sans Variable", "Moriatz Sans", sans-serif;
-  font-variation-settings: "wght" 300;
+  font-variation-settings: "wght" 500;
   letter-spacing: 0.08em;
 }
 ```
 
 ## Family
 
-- Axis: Weight (`wght`), 100–700, default 300
+- Axis: Weight (`wght`), 100–700, default 500 Dense
 - Style: Upright
 - Character set: printable Basic Latin plus core display punctuation
 - Web format: WOFF2 variable font

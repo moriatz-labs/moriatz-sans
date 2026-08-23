@@ -21,7 +21,7 @@ def main() -> None:
 
     axes = {axis.axisTag: axis for axis in font["fvar"].axes}
     weight = axes["wght"]
-    assert (weight.minValue, weight.defaultValue, weight.maxValue) == (100, 300, 700)
+    assert (weight.minValue, weight.defaultValue, weight.maxValue) == (100, 500, 700)
 
     cmap = font.getBestCmap()
     for character in "Moriatz LabsABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?@#%&·–—":
@@ -34,7 +34,7 @@ def main() -> None:
     }
     assert "Moriatz Sans Variable" in family_names
     version_names = {record.toUnicode() for record in font["name"].names if record.nameID == 5}
-    assert "Version 0.5.0" in version_names
+    assert "Version 0.6.0" in version_names
 
     regular = TTFont(REGULAR)
     regular_cmap = regular.getBestCmap()
@@ -58,6 +58,8 @@ def main() -> None:
     h_glyph = glyf[regular_cmap[ord("h")]]
     n_glyph = glyf[regular_cmap[ord("n")]]
     assert h_glyph.yMax - n_glyph.yMax >= 200, (h_glyph.yMax, n_glyph.yMax)
+    k_glyph = glyf[regular_cmap[ord("k")]]
+    assert max(y for x, y in k_glyph.coordinates if x > 250) < 600
     for character in "0123456789":
         glyph = glyf[regular_cmap[ord(character)]]
         assert (glyph.yMin, glyph.yMax) == (0, 720), (character, glyph.yMin, glyph.yMax)

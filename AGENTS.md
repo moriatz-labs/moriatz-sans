@@ -14,7 +14,7 @@ Moriatz Sans is Moriatz Labs' canonical variable system typeface.
 
 - Create a local virtual environment and install the exact versions in `requirements.txt`.
 - Run `python scripts/build.py` followed by `python scripts/test_font.py`.
-- Confirm the variable `wght` axis remains 100–700 with a default of 300.
+- Confirm the variable `wght` axis remains 100–700 with a default of 500 Dense.
 - Visually inspect the Moriatz Labs proof after every glyph or interpolation change.
 
 ## Release
