@@ -1,7 +1,7 @@
 {
   "name": "moriatz-sans",
-  "version": "0.1.0",
-  "description": "Moriatz Sans — Moriatz Labs' ultra-thin variable system typeface.",
+  "version": "0.2.0",
+  "description": "Moriatz Sans — Moriatz Labs' tapered variable system typeface.",
   "license": "OFL-1.1",
   "sideEffects": [
     "*.css"

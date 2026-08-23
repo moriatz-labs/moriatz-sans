@@ -6,7 +6,7 @@ Moriatz Sans is Moriatz Labs' canonical variable system typeface.
 
 - `scripts/build.py` is the source of truth for glyph construction, interpolation masters, metadata, packaged CSS, and specimen artwork.
 - Keep the family original. Do not import, trace, rename, or derive outlines from third-party fonts.
-- Preserve the tapered toothpick construction across all masters.
+- Preserve the tapered toothpick construction across all masters while keeping the Regular master dark enough for interface text.
 - Commit the generated `dist/` files because Git and GitHub installs consume the package directly.
 - Commit the generated Moriatz Labs PNG and SVG proofs.
 
@@ -22,4 +22,3 @@ Moriatz Sans is Moriatz Labs' canonical variable system typeface.
 - Font software and sources remain under OFL-1.1.
 - Tag releases with semantic versions.
 - Attach the variable TTF, variable WOFF2, Regular TTF, and Moriatz Labs proof to each GitHub release.
-
