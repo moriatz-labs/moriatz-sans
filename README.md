@@ -2,7 +2,7 @@
 
 Moriatz Sans is Moriatz Labs' original variable system typeface. Its letterforms are assembled from tapered geometric strokes: deliberately skeletal, technical, and "toothpick" in character, but dark enough to remain crisp at interface sizes.
 
-Strawn uses Moriatz Sans as its complete typographic voice across interface controls, body copy, headings, code, data, and brand moments. Version 0.3 retains the darker tapered construction and normalizes cap-height, x-height, baseline, and sidebearing alignment across every master.
+Strawn uses Moriatz Sans as its complete typographic voice across interface controls, body copy, headings, code, data, and brand moments. Version 0.4 retains the darker tapered construction and introduces a true lowercase alphabet with bowls, shoulders, ascenders, and descenders that harmonize with the capitals.
 
 ## Install
 
@@ -32,7 +32,7 @@ import "moriatz-sans";
 - Web format: WOFF2 variable font
 - Desktop formats: variable TTF and Regular TTF
 
-Lowercase letters intentionally render as compact small capitals. Capitals retain the full cap height, creating an architectural rhythm in mixed-case names such as “Moriatz Labs.”
+Lowercase letters use a 520-unit x-height, 680-unit ascenders, and −180-unit descenders. Capitals retain the 720-unit cap height, so mixed-case names and sentences remain distinct without reading as mismatched miniature capitals.
 
 ## Build
 
