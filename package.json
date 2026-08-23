@@ -1,0 +1,41 @@
+{
+  "name": "moriatz-sans",
+  "version": "0.1.0",
+  "description": "Moriatz Sans — Moriatz Labs' ultra-thin variable system typeface.",
+  "license": "OFL-1.1",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "OFL.txt"
+  ],
+  "style": "./dist/index.css",
+  "exports": {
+    ".": "./dist/index.css",
+    "./variable.css": "./dist/index.css",
+    "./files/*": "./dist/files/*"
+  },
+  "scripts": {
+    "build": "python scripts/build.py",
+    "test": "python scripts/test_font.py",
+    "quality": "npm run build && npm test"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moriatz-labs/moriatz-sans.git"
+  },
+  "homepage": "https://github.com/moriatz-labs/moriatz-sans#readme",
+  "bugs": "https://github.com/moriatz-labs/moriatz-sans/issues",
+  "keywords": [
+    "font",
+    "variable-font",
+    "system-font",
+    "moriatz"
+  ]
+}
