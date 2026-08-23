@@ -26,9 +26,9 @@ DESCENT = -220
 CAP_HEIGHT = 720
 X_HEIGHT = 520
 ASCENDER_HEIGHT = CAP_HEIGHT
-DESCENDER_HEIGHT = -180
+DESCENDER_HEIGHT = DESCENT
 DEFAULT_ADVANCE = 620
-VERSION = "0.4.1"
+VERSION = "0.5.0"
 
 Point = tuple[float, float]
 PathStroke = list[Point]
@@ -64,7 +64,7 @@ UPPER: dict[str, GlyphShape] = {
     "N": shape([[(L, B), (L, T), (R, B), (R, T)]]),
     "O": shape([[(195, T), (405, T), (R, 610), (R, 110), (405, B), (195, B), (L, 110), (L, 610), (195, T)]]),
     "P": shape([[(L, B), (L, T), (390, T), (R, 610), (R, 470), (390, M), (L, M)]]),
-    "Q": shape([[(195, T), (405, T), (R, 610), (R, 110), (405, B), (195, B), (L, 110), (L, 610), (195, T)], [(355, 155), (540, -55)]]),
+    "Q": shape([[(195, T), (405, T), (R, 610), (R, 110), (405, B), (195, B), (L, 110), (L, 610), (195, T)], [(350, 170), (565, DESCENDER_HEIGHT)]]),
     "R": shape([[(L, B), (L, T), (390, T), (R, 610), (R, 470), (390, M), (L, M)], [(340, M), (R, B)]]),
     "S": shape([[(R, T), (L, T), (L, M), (R, M), (R, B), (L, B)]]),
     "T": shape([[(L, T), (R, T)], [(C, T), (C, B)]]),
@@ -84,29 +84,29 @@ UPPER: dict[str, GlyphShape] = {
 # descenders so capitals and lowercase can share a line naturally.
 LOWER: dict[str, GlyphShape] = {
     "a": shape([
-        [(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)],
-        [(R, X_HEIGHT), (R, 0)],
+        [(L, 420), (180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 0)],
+        [(R, 260), (L, 260), (L, 100), (180, 0), (R, 0)],
     ], advance=560),
     "b": shape([
         [(L, 0), (L, ASCENDER_HEIGHT)],
-        [(L, X_HEIGHT), (385, X_HEIGHT), (R, 420), (R, 100), (385, 0), (L, 0)],
+        [(L, X_HEIGHT), (385, 460), (R, 360), (R, 100), (385, 0), (L, 0)],
     ], advance=560),
     "c": shape([[(R, X_HEIGHT), (180, X_HEIGHT), (L, 420), (L, 100), (180, 0), (R, 0)]], advance=550),
     "d": shape([
         [(R, 0), (R, ASCENDER_HEIGHT)],
-        [(R, X_HEIGHT), (215, X_HEIGHT), (L, 420), (L, 100), (215, 0), (R, 0)],
+        [(R, X_HEIGHT), (215, 460), (L, 360), (L, 100), (215, 0), (R, 0)],
     ], advance=560),
     "e": shape([
-        [(R, 260), (L, 260), (L, 420), (180, X_HEIGHT), (405, X_HEIGHT), (R, 420)],
+        [(R, 260), (L, 260), (L, 420), (180, X_HEIGHT), (405, X_HEIGHT), (R, 420), (R, 260)],
         [(L, 260), (L, 100), (180, 0), (R, 0)],
     ], advance=550),
     "f": shape([
-        [(C, 0), (C, 560), (380, ASCENDER_HEIGHT), (R, ASCENDER_HEIGHT)],
-        [(L, 410), (430, 410)],
+        [(240, 0), (240, ASCENDER_HEIGHT), (R, ASCENDER_HEIGHT)],
+        [(L, 430), (430, 430)],
     ], advance=500),
     "g": shape([
         [(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)],
-        [(R, X_HEIGHT), (R, DESCENDER_HEIGHT), (390, DESCENDER_HEIGHT), (220, -80)],
+        [(R, X_HEIGHT), (R, -120), (420, DESCENDER_HEIGHT), (210, DESCENDER_HEIGHT), (L, -120)],
     ], advance=560),
     "h": shape([
         [(L, 0), (L, ASCENDER_HEIGHT)],
@@ -116,7 +116,7 @@ LOWER: dict[str, GlyphShape] = {
     "j": shape([[(C, 370), (C, -80), (220, DESCENDER_HEIGHT), (L, DESCENDER_HEIGHT)]], advance=380, dots=[(C, 500)]),
     "k": shape([
         [(L, 0), (L, ASCENDER_HEIGHT)],
-        [(R, X_HEIGHT), (L, 250), (R, 0)],
+        [(R, ASCENDER_HEIGHT), (L, 250), (R, 0)],
     ], advance=550),
     "l": shape([[(C, ASCENDER_HEIGHT), (C, 90), (380, 0), (R, 0)]], advance=420),
     "m": shape([
@@ -131,11 +131,11 @@ LOWER: dict[str, GlyphShape] = {
     "o": shape([[(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 100), (390, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)]], advance=560),
     "p": shape([
         [(L, DESCENDER_HEIGHT), (L, X_HEIGHT)],
-        [(L, X_HEIGHT), (385, X_HEIGHT), (R, 420), (R, 100), (385, 0), (L, 0)],
+        [(L, X_HEIGHT), (385, 460), (R, 360), (R, 100), (385, 0), (L, 0)],
     ], advance=560),
     "q": shape([
         [(R, DESCENDER_HEIGHT), (R, X_HEIGHT)],
-        [(R, X_HEIGHT), (215, X_HEIGHT), (L, 420), (L, 100), (215, 0), (R, 0)],
+        [(R, X_HEIGHT), (215, 460), (L, 360), (L, 100), (215, 0), (R, 0)],
     ], advance=560),
     "r": shape([
         [(L, 0), (L, X_HEIGHT)],
@@ -311,7 +311,7 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         advance = shapes[character][0]
         vertical_bounds = None
         if character in UPPER:
-            vertical_bounds = (-55, CAP_HEIGHT) if character == "Q" else (0, CAP_HEIGHT)
+            vertical_bounds = (DESCENDER_HEIGHT, CAP_HEIGHT) if character == "Q" else (0, CAP_HEIGHT)
         elif character in "acemnorsuvwxz":
             vertical_bounds = (0, X_HEIGHT)
         elif character in "bdfhkl":
