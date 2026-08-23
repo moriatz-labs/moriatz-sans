@@ -25,8 +25,10 @@ ASCENT = 820
 DESCENT = -220
 CAP_HEIGHT = 720
 X_HEIGHT = 520
+ASCENDER_HEIGHT = 680
+DESCENDER_HEIGHT = -180
 DEFAULT_ADVANCE = 620
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 Point = tuple[float, float]
 PathStroke = list[Point]
@@ -72,6 +74,87 @@ UPPER: dict[str, GlyphShape] = {
     "X": shape([[(L, T), (R, B)], [(R, T), (L, B)]]),
     "Y": shape([[(L, T), (C, M), (R, T)], [(C, M), (C, B)]]),
     "Z": shape([[(L, T), (R, T), (L, B), (R, B)]]),
+}
+
+
+# Lowercase letters have their own construction. Earlier releases scaled the
+# capitals down to the x-height, which made mixed-case words read as a large
+# initial followed by miniature capitals. These outlines preserve the same
+# tapered geometry while adding recognisable bowls, shoulders, ascenders, and
+# descenders so capitals and lowercase can share a line naturally.
+LOWER: dict[str, GlyphShape] = {
+    "a": shape([
+        [(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)],
+        [(R, X_HEIGHT), (R, 0)],
+    ], advance=560),
+    "b": shape([
+        [(L, 0), (L, ASCENDER_HEIGHT)],
+        [(L, X_HEIGHT), (385, X_HEIGHT), (R, 420), (R, 100), (385, 0), (L, 0)],
+    ], advance=560),
+    "c": shape([[(R, X_HEIGHT), (180, X_HEIGHT), (L, 420), (L, 100), (180, 0), (R, 0)]], advance=550),
+    "d": shape([
+        [(R, 0), (R, ASCENDER_HEIGHT)],
+        [(R, X_HEIGHT), (215, X_HEIGHT), (L, 420), (L, 100), (215, 0), (R, 0)],
+    ], advance=560),
+    "e": shape([
+        [(R, 260), (L, 260), (L, 420), (180, X_HEIGHT), (405, X_HEIGHT), (R, 420)],
+        [(L, 260), (L, 100), (180, 0), (R, 0)],
+    ], advance=550),
+    "f": shape([
+        [(C, 0), (C, 560), (380, ASCENDER_HEIGHT), (R, ASCENDER_HEIGHT)],
+        [(L, 410), (430, 410)],
+    ], advance=500),
+    "g": shape([
+        [(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)],
+        [(R, X_HEIGHT), (R, DESCENDER_HEIGHT), (390, DESCENDER_HEIGHT), (220, -80)],
+    ], advance=560),
+    "h": shape([
+        [(L, 0), (L, ASCENDER_HEIGHT)],
+        [(L, X_HEIGHT), (360, X_HEIGHT), (R, 400), (R, 0)],
+    ], advance=560),
+    "i": shape([[(C, 0), (C, 370)]], advance=340, dots=[(C, 500)]),
+    "j": shape([[(C, 370), (C, -80), (220, DESCENDER_HEIGHT), (L, DESCENDER_HEIGHT)]], advance=380, dots=[(C, 500)]),
+    "k": shape([
+        [(L, 0), (L, ASCENDER_HEIGHT)],
+        [(R, X_HEIGHT), (L, 250), (R, 0)],
+    ], advance=550),
+    "l": shape([[(C, ASCENDER_HEIGHT), (C, 90), (380, 0), (R, 0)]], advance=420),
+    "m": shape([
+        [(L, 0), (L, X_HEIGHT)],
+        [(L, X_HEIGHT), (275, X_HEIGHT), (350, 410), (350, 0)],
+        [(350, X_HEIGHT), (535, X_HEIGHT), (610, 410), (610, 0)],
+    ], advance=700),
+    "n": shape([
+        [(L, 0), (L, X_HEIGHT)],
+        [(L, X_HEIGHT), (360, X_HEIGHT), (R, 400), (R, 0)],
+    ], advance=560),
+    "o": shape([[(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 100), (390, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)]], advance=560),
+    "p": shape([
+        [(L, DESCENDER_HEIGHT), (L, X_HEIGHT)],
+        [(L, X_HEIGHT), (385, X_HEIGHT), (R, 420), (R, 100), (385, 0), (L, 0)],
+    ], advance=560),
+    "q": shape([
+        [(R, DESCENDER_HEIGHT), (R, X_HEIGHT)],
+        [(R, X_HEIGHT), (215, X_HEIGHT), (L, 420), (L, 100), (215, 0), (R, 0)],
+    ], advance=560),
+    "r": shape([
+        [(L, 0), (L, X_HEIGHT)],
+        [(L, X_HEIGHT), (330, X_HEIGHT), (R, 390)],
+    ], advance=500),
+    "s": shape([[(R, X_HEIGHT), (L, X_HEIGHT), (L, 260), (R, 260), (R, 0), (L, 0)]], advance=540),
+    "t": shape([
+        [(C, 610), (C, 100), (390, 0), (R, 0)],
+        [(L, 410), (R, 410)],
+    ], advance=500),
+    "u": shape([[(L, X_HEIGHT), (L, 100), (180, 0), (390, 0), (R, 100), (R, X_HEIGHT)]], advance=560),
+    "v": shape([[(L, X_HEIGHT), (C, 0), (R, X_HEIGHT)]], advance=560),
+    "w": shape([[(55, X_HEIGHT), (165, 0), (300, 260), (435, 0), (565, X_HEIGHT)]], advance=640),
+    "x": shape([[(L, X_HEIGHT), (R, 0)], [(R, X_HEIGHT), (L, 0)]], advance=550),
+    "y": shape([
+        [(L, X_HEIGHT), (C, 40), (R, X_HEIGHT)],
+        [(C, 40), (250, DESCENDER_HEIGHT), (L, DESCENDER_HEIGHT)],
+    ], advance=560),
+    "z": shape([[(L, X_HEIGHT), (R, X_HEIGHT), (L, 0), (R, 0)]], advance=540),
 }
 
 DIGITS: dict[str, GlyphShape] = {
@@ -126,20 +209,8 @@ PUNCT: dict[str, GlyphShape] = {
 }
 
 
-def lower_shape(letter: str) -> GlyphShape:
-    advance, paths, dots = UPPER[letter.upper()]
-    scale = X_HEIGHT / CAP_HEIGHT
-    transformed_paths = [
-        [((x - L) * scale + 78, y * scale) for x, y in path]
-        for path in paths
-    ]
-    transformed_dots = [((x - L) * scale + 78, y * scale) for x, y in dots]
-    return int((advance - 70) * scale + 110), transformed_paths, transformed_dots
-
-
 def all_shapes() -> dict[str, GlyphShape]:
-    result = {**UPPER, **DIGITS, **PUNCT}
-    result.update({letter.lower(): lower_shape(letter) for letter in UPPER})
+    result = {**UPPER, **LOWER, **DIGITS, **PUNCT}
     result[" "] = shape(advance=320)
     return result
 
@@ -241,8 +312,18 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         vertical_bounds = None
         if character in UPPER:
             vertical_bounds = (-55, CAP_HEIGHT) if character == "Q" else (0, CAP_HEIGHT)
-        elif character.islower():
-            vertical_bounds = (-40, X_HEIGHT) if character == "q" else (0, X_HEIGHT)
+        elif character in "acemnorsuvwxz":
+            vertical_bounds = (0, X_HEIGHT)
+        elif character in "bdfhkl":
+            vertical_bounds = (0, ASCENDER_HEIGHT)
+        elif character in "gpqy":
+            vertical_bounds = (DESCENDER_HEIGHT, X_HEIGHT)
+        elif character == "i":
+            vertical_bounds = (0, 620)
+        elif character == "j":
+            vertical_bounds = (DESCENDER_HEIGHT, 620)
+        elif character == "t":
+            vertical_bounds = (0, 610)
         elif character in DIGITS:
             vertical_bounds = (0, CAP_HEIGHT)
 
@@ -269,7 +350,7 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
             "version": f"Version {VERSION}",
             "manufacturer": "Moriatz Labs",
             "designer": "Moriatz Labs",
-            "description": "A darkened, tapered-stroke system typeface for Moriatz Labs.",
+            "description": "A tapered-stroke variable system typeface with harmonious true lowercase for Moriatz Labs.",
             "vendorURL": "https://moriatz.com",
             "licenseDescription": "Licensed under the SIL Open Font License, Version 1.1.",
             "licenseInfoURL": "https://openfontlicense.org",
