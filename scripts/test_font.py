@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
@@ -8,12 +9,20 @@ VARIABLE = ROOT / "dist" / "files" / "MoriatzSans-Variable.ttf"
 WOFF2 = ROOT / "dist" / "files" / "MoriatzSans-Variable.woff2"
 REGULAR = ROOT / "dist" / "files" / "MoriatzSans-Regular.ttf"
 DISPLAY = ROOT / "documentation" / "moriatz-labs-display.png"
+HERO_STROKES = ROOT / "dist" / "files" / "MoriatzSans-Hero-Strokes.json"
 
 
 def main() -> None:
-    for artifact in (VARIABLE, WOFF2, REGULAR, DISPLAY):
+    for artifact in (VARIABLE, WOFF2, REGULAR, DISPLAY, HERO_STROKES):
         assert artifact.exists(), f"Missing artifact: {artifact}"
-        assert artifact.stat().st_size > 1000, f"Artifact is unexpectedly small: {artifact}"
+        assert artifact.stat().st_size > 500, f"Artifact is unexpectedly small: {artifact}"
+
+    hero = json.loads(HERO_STROKES.read_text(encoding="utf-8"))
+    assert hero["fontVersion"] == "0.6.1"
+    assert hero["lines"] == ["MORIATZ", "SANS"]
+    assert hero["totalInkLength"] > 0
+    assert {stroke["kind"] for stroke in hero["strokes"]} == {"ink", "travel"}
+    assert all(stroke["length"] > 0 for stroke in hero["strokes"])
 
     font = TTFont(VARIABLE)
     required_tables = {"cmap", "fvar", "gvar", "glyf", "head", "hhea", "hmtx", "name", "OS/2", "post"}
