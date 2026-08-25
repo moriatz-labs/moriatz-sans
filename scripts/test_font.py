@@ -2,14 +2,15 @@ import json
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
+from fontTools.varLib.instancer import instantiateVariableFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VARIABLE = ROOT / "dist" / "files" / "MoriatzSans-Variable.ttf"
-WOFF2 = ROOT / "dist" / "files" / "MoriatzSans-Variable.woff2"
-REGULAR = ROOT / "dist" / "files" / "MoriatzSans-Regular.ttf"
+VARIABLE = ROOT / "dist" / "files" / "Strawn-Variable.ttf"
+WOFF2 = ROOT / "dist" / "files" / "Strawn-Variable.woff2"
+REGULAR = ROOT / "dist" / "files" / "Strawn-Regular.ttf"
 DISPLAY = ROOT / "documentation" / "moriatz-labs-display.png"
-HERO_STROKES = ROOT / "dist" / "files" / "MoriatzSans-Hero-Strokes.json"
+HERO_STROKES = ROOT / "dist" / "files" / "Strawn-Hero-Strokes.json"
 
 
 def main() -> None:
@@ -19,7 +20,7 @@ def main() -> None:
 
     hero = json.loads(HERO_STROKES.read_text(encoding="utf-8"))
     assert hero["fontVersion"] == "0.6.1"
-    assert hero["lines"] == ["MORIATZ", "SANS"]
+    assert hero["lines"] == ["STRAWN"]
     assert hero["totalInkLength"] > 0
     assert {stroke["kind"] for stroke in hero["strokes"]} == {"ink", "travel"}
     assert all(stroke["length"] > 0 for stroke in hero["strokes"])
@@ -32,6 +33,14 @@ def main() -> None:
     weight = axes["wght"]
     assert (weight.minValue, weight.defaultValue, weight.maxValue) == (100, 500, 700)
 
+    structural = instantiateVariableFont(TTFont(VARIABLE), {"wght": 700}, inplace=True)
+    structural_cmap = structural.getBestCmap()
+    structural_m = structural["glyf"][structural_cmap[ord("M")]]
+    structural_m_coordinates = list(structural_m.coordinates)
+    assert structural_m_coordinates[0][1] == 0
+    assert structural_m_coordinates[1][1] >= 200
+    assert structural_m_coordinates[5][1] >= 200
+
     cmap = font.getBestCmap()
     for character in "Moriatz LabsABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?@#%&·–—":
         assert ord(character) in cmap, f"Missing character: {character!r}"
@@ -41,7 +50,7 @@ def main() -> None:
         for record in font["name"].names
         if record.nameID == 1
     }
-    assert "Moriatz Sans Variable" in family_names
+    assert "Strawn" in family_names
     version_names = {record.toUnicode() for record in font["name"].names if record.nameID == 5}
     assert "Version 0.6.1" in version_names
 
@@ -90,7 +99,12 @@ def main() -> None:
             left_side_bearing,
             right_side_bearing,
         )
-    print("Moriatz Sans quality checks passed.")
+    for axis_weight in (100, 300, 500, 700):
+        instance = instantiateVariableFont(TTFont(VARIABLE), {"wght": axis_weight}, inplace=True)
+        instance_cmap = instance.getBestCmap()
+        instance_sidebearings = [instance["hmtx"].metrics[instance_cmap[ord(character)]][1] for character in "Trt"]
+        assert instance_sidebearings == [40, 40, 40], (axis_weight, instance_sidebearings)
+    print("Strawn quality checks passed.")
 
 
 if __name__ == "__main__":

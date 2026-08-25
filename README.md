@@ -1,8 +1,8 @@
-# Moriatz Sans
+# Strawn
 
-Moriatz Sans is Moriatz Labs' original variable system typeface. Its letterforms are assembled from tapered geometric strokes: deliberately skeletal, technical, and "toothpick" in character, but dark enough to remain crisp at interface sizes.
+Strawn is Moriatz Labs' original variable system typeface. Its letterforms are assembled from tapered geometric strokes: deliberately skeletal, technical, and "toothpick" in character, but dark enough to remain crisp at interface sizes.
 
-Strawn uses Moriatz Sans as its complete typographic voice across interface controls, body copy, headings, code, data, and brand moments. Version 0.5 strengthens mixed-case recognition with cap-line ascenders, full-depth descenders, a two-storey `a`, lower `b` and `d` bowls, and clearer `e`, `f`, `g`, and `Q` constructions.
+Moriatz uses Strawn as its complete typographic voice across interface controls, body copy, headings, code, data, and brand moments. Version 0.6 strengthens mixed-case recognition with cap-line ascenders, full-depth descenders, a two-storey `a`, lower `b` and `d` bowls, and clearer `e`, `f`, `g`, and `Q` constructions.
 
 ## Install
 
@@ -18,7 +18,7 @@ import "moriatz-sans";
 
 ```css
 .display-type {
-  font-family: "Moriatz Sans Variable", "Moriatz Sans", sans-serif;
+  font-family: "Strawn", sans-serif;
   font-variation-settings: "wght" 500;
   letter-spacing: 0.08em;
 }
@@ -47,4 +47,4 @@ The source of truth is `scripts/build.py`: glyph skeletons, interpolation master
 
 ## License
 
-Moriatz Sans is licensed under the SIL Open Font License 1.1. See `OFL.txt`.
+Strawn is licensed under the SIL Open Font License 1.1. See `OFL.txt`.
