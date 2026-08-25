@@ -28,7 +28,7 @@ X_HEIGHT = 520
 ASCENDER_HEIGHT = CAP_HEIGHT
 DESCENDER_HEIGHT = DESCENT
 DEFAULT_ADVANCE = 620
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 Point = tuple[float, float]
 PathStroke = list[Point]
@@ -46,6 +46,7 @@ def shape(
 
 L, C, R = 90, 300, 510
 B, M, T = 0, 360, 720
+LOWER_BOWL_HEIGHT = 430
 
 UPPER: dict[str, GlyphShape] = {
     "A": shape([[(L, B), (C, T), (R, B)], [(165, 250), (435, 250)]]),
@@ -89,12 +90,12 @@ LOWER: dict[str, GlyphShape] = {
     ], advance=560),
     "b": shape([
         [(L, 0), (L, ASCENDER_HEIGHT)],
-        [(L, X_HEIGHT), (385, 460), (R, 360), (R, 100), (385, 0), (L, 0)],
+        [(L, LOWER_BOWL_HEIGHT), (385, LOWER_BOWL_HEIGHT), (R, 340), (R, 100), (385, 0), (L, 0)],
     ], advance=560),
     "c": shape([[(R, X_HEIGHT), (180, X_HEIGHT), (L, 420), (L, 100), (180, 0), (R, 0)]], advance=550),
     "d": shape([
         [(R, 0), (R, ASCENDER_HEIGHT)],
-        [(R, X_HEIGHT), (215, 460), (L, 360), (L, 100), (215, 0), (R, 0)],
+        [(R, LOWER_BOWL_HEIGHT), (215, LOWER_BOWL_HEIGHT), (L, 340), (L, 100), (215, 0), (R, 0)],
     ], advance=560),
     "e": shape([
         [(R, 260), (L, 260), (L, 420), (180, X_HEIGHT), (405, X_HEIGHT), (R, 420), (R, 260)],
@@ -110,7 +111,7 @@ LOWER: dict[str, GlyphShape] = {
     ], advance=560),
     "h": shape([
         [(L, 0), (L, ASCENDER_HEIGHT)],
-        [(L, X_HEIGHT), (360, X_HEIGHT), (R, 400), (R, 0)],
+        [(L, LOWER_BOWL_HEIGHT), (360, LOWER_BOWL_HEIGHT), (R, 340), (R, 0)],
     ], advance=560),
     "i": shape([[(C, 0), (C, 370)]], advance=340, dots=[(C, 500)]),
     "j": shape([[(C, 370), (C, -80), (220, DESCENDER_HEIGHT), (L, DESCENDER_HEIGHT)]], advance=380, dots=[(C, 500)]),
@@ -131,11 +132,11 @@ LOWER: dict[str, GlyphShape] = {
     "o": shape([[(180, X_HEIGHT), (390, X_HEIGHT), (R, 420), (R, 100), (390, 0), (180, 0), (L, 100), (L, 420), (180, X_HEIGHT)]], advance=560),
     "p": shape([
         [(L, DESCENDER_HEIGHT), (L, X_HEIGHT)],
-        [(L, X_HEIGHT), (385, 460), (R, 360), (R, 100), (385, 0), (L, 0)],
+        [(L, LOWER_BOWL_HEIGHT), (385, LOWER_BOWL_HEIGHT), (R, 340), (R, 100), (385, 0), (L, 0)],
     ], advance=560),
     "q": shape([
         [(R, DESCENDER_HEIGHT), (R, X_HEIGHT)],
-        [(R, X_HEIGHT), (215, 460), (L, 360), (L, 100), (215, 0), (R, 0)],
+        [(R, LOWER_BOWL_HEIGHT), (215, LOWER_BOWL_HEIGHT), (L, 340), (L, 100), (215, 0), (R, 0)],
     ], advance=560),
     "r": shape([
         [(L, 0), (L, X_HEIGHT)],
