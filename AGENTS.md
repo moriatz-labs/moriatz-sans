@@ -1,6 +1,6 @@
-# Moriatz Sans Repository Guidance
+# Strawn Typeface Repository Guidance
 
-Moriatz Sans is Moriatz Labs' canonical variable system typeface.
+Strawn is Moriatz Labs' canonical variable system typeface.
 
 ## Source and artifacts
 

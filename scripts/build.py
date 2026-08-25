@@ -69,7 +69,7 @@ UPPER: dict[str, GlyphShape] = {
     "Q": shape([[(195, T), (405, T), (R, 610), (R, 110), (405, B), (195, B), (L, 110), (L, 610), (195, T)], [(350, 170), (565, DESCENDER_HEIGHT)]]),
     "R": shape([[(L, B), (L, T), (390, T), (R, 610), (R, 470), (390, M), (L, M)], [(340, M), (R, B)]]),
     "S": shape([[(R, T), (L, T), (L, M), (R, M), (R, B), (L, B)]]),
-    "T": shape([[(L, T), (R, T)], [(C, T), (C, B)]]),
+    "T": shape([[(L, T), (R, T)], [(C, T), (C, B)]], advance=500),
     "U": shape([[(L, T), (L, 110), (195, B), (405, B), (R, 110), (R, T)]]),
     "V": shape([[(L, T), (C, B), (R, T)]]),
     "W": shape([[(55, T), (165, B), (300, M), (435, B), (565, T)]], advance=680),
@@ -142,7 +142,7 @@ LOWER: dict[str, GlyphShape] = {
     "r": shape([
         [(L, 0), (L, X_HEIGHT)],
         [(L, X_HEIGHT), (330, X_HEIGHT), (R, 390)],
-    ], advance=500),
+    ], advance=538),
     "s": shape([[(R, X_HEIGHT), (L, X_HEIGHT), (L, 260), (R, 260), (R, 0), (L, 0)]], advance=540),
     "t": shape([
         [(C, 610), (C, 100), (390, 0), (R, 0)],
@@ -231,7 +231,7 @@ def write_hero_wordmark() -> None:
     shapes = all_shapes()
     width, height = 5000, 1740
     tracking = 80
-    line_specs = [("MORIATZ", 760), ("SANS", 1640)]
+    line_specs = [("STRAWN", 1200)]
     strokes: list[dict[str, object]] = []
     previous_end: Point | None = None
 
@@ -266,7 +266,7 @@ def write_hero_wordmark() -> None:
         "strokes": strokes,
         "totalInkLength": round(sum(float(stroke["length"]) for stroke in strokes if stroke["kind"] == "ink"), 2),
     }
-    (FILES / "MoriatzSans-Hero-Strokes.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    (FILES / "Strawn-Hero-Strokes.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
 def add_tapered_stroke(pen: TTGlyphPen, start: Point, end: Point, width: float) -> None:
@@ -279,7 +279,10 @@ def add_tapered_stroke(pen: TTGlyphPen, start: Point, end: Point, width: float) 
     ux, uy = dx / length, dy / length
     nx, ny = -uy, ux
     half = width / 2
-    taper = min(length * 0.24, max(width * 1.65, 22))
+    # Let weight gather through the body without turning the terminals into
+    # blunt caps. The quadratic width contribution keeps the Fine master
+    # restrained while giving Dense and Structural visibly longer points.
+    taper = min(length * 0.36, max(width * (1.45 + width / 120), 24))
     points = [
         (x1, y1),
         (x1 + ux * taper + nx * half, y1 + uy * taper + ny * half),
@@ -381,7 +384,14 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
         elif character in DIGITS:
             vertical_bounds = (0, CAP_HEIGHT)
 
-        glyph = align_glyph(build_glyph(shapes[character], stroke_width), advance, vertical_bounds)
+        glyph = build_glyph(shapes[character], stroke_width)
+        if character in "Trt":
+            # These three forms begin headline lines and share one optical edge.
+            # Recompute each master's advance from its actual outline so the
+            # 40-unit sidebearing survives interpolation across the full axis.
+            x_values = [point[0] for point in glyph.coordinates]
+            advance = round(max(x_values) - min(x_values) + 80)
+        glyph = align_glyph(glyph, advance, vertical_bounds)
         glyphs[name] = glyph
         left_side_bearing = min((point[0] for point in glyph.coordinates), default=0)
         metrics[name] = (advance, left_side_bearing)
@@ -396,11 +406,11 @@ def build_master(weight: int, stroke_width: float, path: Path) -> None:
     font.setupHorizontalHeader(ascent=ASCENT, descent=DESCENT, lineGap=80)
     font.setupNameTable(
         {
-            "familyName": "Moriatz Sans",
+            "familyName": "Strawn",
             "styleName": style,
-            "uniqueFontIdentifier": f"Moriatz Sans {style} {VERSION}",
-            "fullName": f"Moriatz Sans {style}",
-            "psName": f"MoriatzSans-{style}",
+            "uniqueFontIdentifier": f"Strawn {style} {VERSION}",
+            "fullName": f"Strawn {style}",
+            "psName": f"Strawn-{style}",
             "version": f"Version {VERSION}",
             "manufacturer": "Moriatz Labs",
             "designer": "Moriatz Labs",
@@ -440,10 +450,10 @@ def make_designspace(master_paths: dict[int, Path]) -> Path:
 
     for weight, path in master_paths.items():
         source = SourceDescriptor()
-        source.name = f"Moriatz Sans {weight}"
+        source.name = f"Strawn {weight}"
         source.path = str(path)
         source.location = {"Weight": weight}
-        source.familyName = "Moriatz Sans"
+        source.familyName = "Strawn"
         source.styleName = {100: "Thin", 300: "Light", 500: "Regular", 700: "Bold"}[weight]
         if weight == 500:
             source.copyInfo = True
@@ -451,7 +461,7 @@ def make_designspace(master_paths: dict[int, Path]) -> Path:
             source.copyFeatures = True
         document.addSource(source)
 
-    designspace_path = BUILD / "MoriatzSans.designspace"
+    designspace_path = BUILD / "Strawn.designspace"
     document.write(designspace_path)
     return designspace_path
 
@@ -459,12 +469,12 @@ def make_designspace(master_paths: dict[int, Path]) -> Path:
 def set_variable_names(font: TTFont) -> None:
     names = font["name"]
     for name_id, value in {
-        1: "Moriatz Sans Variable",
+        1: "Strawn",
         2: "Regular",
-        3: f"Moriatz Sans Variable {VERSION}",
-        4: "Moriatz Sans Variable",
+        3: f"Strawn Variable {VERSION}",
+        4: "Strawn",
         5: f"Version {VERSION}",
-        6: "MoriatzSans-Variable",
+        6: "Strawn-Variable",
     }.items():
         names.setName(value, name_id, 3, 1, 0x409)
         names.setName(value, name_id, 1, 0, 0)
@@ -472,8 +482,8 @@ def set_variable_names(font: TTFont) -> None:
 
 def write_css() -> None:
     css = """@font-face {
-  font-family: \"Moriatz Sans Variable\";
-  src: url(\"./files/MoriatzSans-Variable.woff2\") format(\"woff2-variations\");
+  font-family: \"Strawn\";
+  src: url(\"./files/Strawn-Variable.woff2\") format(\"woff2-variations\");
   font-display: swap;
   font-style: normal;
   font-weight: 100 700;
@@ -505,10 +515,10 @@ def render_specimen(static_font: Path, variable_woff2: Path) -> None:
     encoded = base64.b64encode(variable_woff2.read_bytes()).decode("ascii")
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
   <style>
-    @font-face {{ font-family: "Moriatz Sans Variable"; src: url(data:font/woff2;base64,{encoded}) format("woff2"); font-weight: 100 700; }}
-    .brand {{ font: 500 230px "Moriatz Sans Variable"; letter-spacing: 30px; fill: #f6f6f2; text-anchor: middle; }}
-    .labs {{ font: 500 230px "Moriatz Sans Variable"; letter-spacing: 52px; fill: #f6f6f2; text-anchor: middle; }}
-    .meta {{ font: 500 42px "Moriatz Sans Variable"; letter-spacing: 10px; fill: #a3a3a3; text-anchor: middle; }}
+    @font-face {{ font-family: "Strawn"; src: url(data:font/woff2;base64,{encoded}) format("woff2"); font-weight: 100 700; }}
+    .brand {{ font: 500 230px "Strawn"; letter-spacing: 30px; fill: #f6f6f2; text-anchor: middle; }}
+    .labs {{ font: 500 230px "Strawn"; letter-spacing: 52px; fill: #f6f6f2; text-anchor: middle; }}
+    .meta {{ font: 500 42px "Strawn"; letter-spacing: 10px; fill: #a3a3a3; text-anchor: middle; }}
   </style>
   <rect width="1600" height="900" fill="#050505"/>
   <text class="brand" x="800" y="390">MORIATZ</text>
@@ -524,14 +534,14 @@ def write_specimen_html() -> None:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Moriatz Sans specimen</title>
+  <title>Strawn specimen</title>
   <link rel="stylesheet" href="../dist/index.css">
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #050505; color: #f5f5f0; }
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { width: min(100% - 2rem, 90rem); margin: auto; padding: 7rem 0; }
-    .display { font-family: "Moriatz Sans Variable", sans-serif; font-weight: 400; letter-spacing: .08em; }
+    .display { font-family: "Strawn", sans-serif; font-weight: 400; letter-spacing: .08em; }
     h1 { max-width: 8ch; margin: 0; font-size: clamp(5rem, 17vw, 15rem); line-height: .82; }
     .deck { max-width: 24ch; margin: 5rem 0; font-size: clamp(2.5rem, 7vw, 7rem); line-height: .95; }
     .axis { display: grid; gap: 2rem; padding-top: 4rem; border-top: 1px solid #333; }
@@ -570,22 +580,22 @@ def main() -> None:
     master_specs = {100: 32.0, 300: 56.0, 500: 76.0, 700: 96.0}
     master_paths: dict[int, Path] = {}
     for weight, stroke_width in master_specs.items():
-        path = BUILD / f"MoriatzSans-{weight}.ttf"
+        path = BUILD / f"Strawn-{weight}.ttf"
         build_master(weight, stroke_width, path)
         master_paths[weight] = path
 
     designspace = make_designspace(master_paths)
     variable_font, _, _ = build_variable(designspace)
     set_variable_names(variable_font)
-    variable_ttf = FILES / "MoriatzSans-Variable.ttf"
+    variable_ttf = FILES / "Strawn-Variable.ttf"
     variable_font.save(variable_ttf)
 
-    variable_woff2 = FILES / "MoriatzSans-Variable.woff2"
+    variable_woff2 = FILES / "Strawn-Variable.woff2"
     webfont = TTFont(variable_ttf)
     webfont.flavor = "woff2"
     webfont.save(variable_woff2)
 
-    static_regular = FILES / "MoriatzSans-Regular.ttf"
+    static_regular = FILES / "Strawn-Regular.ttf"
     shutil.copy2(master_paths[500], static_regular)
 
     write_css()
