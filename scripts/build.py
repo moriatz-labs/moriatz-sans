@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import math
 import shutil
 from pathlib import Path
@@ -214,6 +215,58 @@ def all_shapes() -> dict[str, GlyphShape]:
     result = {**UPPER, **LOWER, **DIGITS, **PUNCT}
     result[" "] = shape(advance=320)
     return result
+
+
+def polyline_length(points: PathStroke) -> float:
+    return sum(math.dist(start, end) for start, end in zip(points, points[1:]))
+
+
+def svg_polyline(points: PathStroke) -> str:
+    commands = [f"M {points[0][0]:.2f} {points[0][1]:.2f}"]
+    commands.extend(f"L {point[0]:.2f} {point[1]:.2f}" for point in points[1:])
+    return " ".join(commands)
+
+
+def write_hero_wordmark() -> None:
+    shapes = all_shapes()
+    width, height = 5000, 1740
+    tracking = 80
+    line_specs = [("MORIATZ", 760), ("SANS", 1640)]
+    strokes: list[dict[str, object]] = []
+    previous_end: Point | None = None
+
+    for word, baseline in line_specs:
+        word_width = sum(shapes[character][0] for character in word) + tracking * (len(word) - 1)
+        cursor = (width - word_width) / 2
+        for character in word:
+            advance, paths, _ = shapes[character]
+            for source_path in paths:
+                points = [(cursor + x, baseline - y) for x, y in source_path]
+                if previous_end is not None:
+                    travel_peak = min(previous_end[1], points[0][1]) - 110
+                    travel_path = (
+                        f"M {previous_end[0]:.2f} {previous_end[1]:.2f} "
+                        f"Q {(previous_end[0] + points[0][0]) / 2:.2f} {travel_peak:.2f} "
+                        f"{points[0][0]:.2f} {points[0][1]:.2f}"
+                    )
+                    direct = math.dist(previous_end, points[0])
+                    strokes.append({"kind": "travel", "path": travel_path, "length": round(direct * 1.12, 2), "glyph": character})
+                strokes.append({"kind": "ink", "path": svg_polyline(points), "length": round(polyline_length(points), 2), "glyph": character})
+                previous_end = points[-1]
+            cursor += advance + tracking
+
+    data = {
+        "fontVersion": VERSION,
+        "viewBox": [0, 0, width, height],
+        "lines": [word for word, _ in line_specs],
+        "lineLayouts": [
+            {"text": word, "x": width / 2, "baseline": baseline, "tracking": tracking}
+            for word, baseline in line_specs
+        ],
+        "strokes": strokes,
+        "totalInkLength": round(sum(float(stroke["length"]) for stroke in strokes if stroke["kind"] == "ink"), 2),
+    }
+    (FILES / "MoriatzSans-Hero-Strokes.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
 def add_tapered_stroke(pen: TTGlyphPen, start: Point, end: Point, width: float) -> None:
@@ -536,6 +589,7 @@ def main() -> None:
     shutil.copy2(master_paths[500], static_regular)
 
     write_css()
+    write_hero_wordmark()
     write_specimen_html()
     render_specimen(static_regular, variable_woff2)
     print(f"Built {variable_ttf.relative_to(ROOT)}")
