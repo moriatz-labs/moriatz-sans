@@ -1,110 +1,176 @@
 import json
 from pathlib import Path
 
+import uharfbuzz as hb
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables._g_l_y_f import flagOverlapSimple
 from fontTools.varLib.instancer import instantiateVariableFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VARIABLE = ROOT / "dist" / "files" / "Strawn-Variable.ttf"
-WOFF2 = ROOT / "dist" / "files" / "Strawn-Variable.woff2"
-REGULAR = ROOT / "dist" / "files" / "Strawn-Regular.ttf"
+FILES = ROOT / "dist" / "files"
+VARIABLE = FILES / "Strawn-Variable.ttf"
+WOFF2 = FILES / "Strawn-Variable.woff2"
+STATICS = {
+    100: FILES / "Strawn-Fine.ttf",
+    300: FILES / "Strawn-Signature.ttf",
+    500: FILES / "Strawn-Dense.ttf",
+    700: FILES / "Strawn-Structural.ttf",
+}
 DISPLAY = ROOT / "documentation" / "moriatz-labs-display.png"
-HERO_STROKES = ROOT / "dist" / "files" / "Strawn-Hero-Strokes.json"
+HERO_STROKES = FILES / "Strawn-Hero-Strokes.json"
+METRICS = FILES / "Strawn-Metrics.json"
+CHARSET = FILES / "Strawn-Character-Set.json"
+VERSION = "0.7.0"
+
+
+def feature_tags(font: TTFont, table: str) -> set[str]:
+    return {record.FeatureTag for record in font[table].table.FeatureList.FeatureRecord}
+
+
+def shaped_advance(text: str, *, kern: bool) -> int:
+    face = hb.Face(VARIABLE.read_bytes())
+    font = hb.Font(face)
+    font.scale = (1000, 1000)
+    buffer = hb.Buffer()
+    buffer.add_str(text)
+    buffer.guess_segment_properties()
+    hb.shape(font, buffer, {"kern": kern})
+    assert all(info.codepoint != 0 for info in buffer.glyph_infos), text
+    return sum(position.x_advance for position in buffer.glyph_positions)
+
+
+def assert_bounds_cover_all_instances(font: TTFont) -> None:
+    declared = (font["head"].xMin, font["head"].yMin, font["head"].xMax, font["head"].yMax)
+    for weight in (100, 300, 500, 700):
+        instance = instantiateVariableFont(TTFont(VARIABLE), {"wght": weight}, inplace=True)
+        glyph_set = instance.getGlyphSet()
+        for name in instance.getGlyphOrder():
+            pen = BoundsPen(glyph_set)
+            glyph_set[name].draw(pen)
+            if not pen.bounds:
+                continue
+            x_min, y_min, x_max, y_max = pen.bounds
+            assert x_min >= declared[0], (weight, name, pen.bounds, declared)
+            assert y_min >= declared[1], (weight, name, pen.bounds, declared)
+            assert x_max <= declared[2], (weight, name, pen.bounds, declared)
+            assert y_max <= declared[3], (weight, name, pen.bounds, declared)
 
 
 def main() -> None:
-    for artifact in (VARIABLE, WOFF2, REGULAR, DISPLAY, HERO_STROKES):
+    artifacts = (VARIABLE, WOFF2, *STATICS.values(), DISPLAY, HERO_STROKES, METRICS, CHARSET)
+    for artifact in artifacts:
         assert artifact.exists(), f"Missing artifact: {artifact}"
         assert artifact.stat().st_size > 500, f"Artifact is unexpectedly small: {artifact}"
 
     hero = json.loads(HERO_STROKES.read_text(encoding="utf-8"))
-    assert hero["fontVersion"] == "0.6.1"
+    assert hero["fontVersion"] == VERSION
     assert hero["lines"] == ["STRAWN"]
     assert hero["totalInkLength"] > 0
     assert {stroke["kind"] for stroke in hero["strokes"]} == {"ink", "travel"}
     assert all(stroke["length"] > 0 for stroke in hero["strokes"])
 
+    metrics_manifest = json.loads(METRICS.read_text(encoding="utf-8"))
+    charset_manifest = json.loads(CHARSET.read_text(encoding="utf-8"))
+    assert metrics_manifest["version"] == VERSION
+    assert metrics_manifest["descenderHeight"] == -220
+    assert charset_manifest["repertoire"] == "GF_Latin_Core"
+    assert charset_manifest["count"] == 319
+
     font = TTFont(VARIABLE)
-    required_tables = {"cmap", "fvar", "gvar", "glyf", "head", "hhea", "hmtx", "name", "OS/2", "post"}
+    required_tables = {
+        "GDEF", "GPOS", "GSUB", "HVAR", "MVAR", "OS/2", "STAT", "cmap",
+        "avar", "fvar", "gasp", "glyf", "gvar", "head", "hhea", "hmtx", "name", "post", "prep",
+    }
     assert required_tables.issubset(font.keys()), required_tables - set(font.keys())
+    assert feature_tags(font, "GPOS") == {"kern", "mark", "mkmk"}
+    assert feature_tags(font, "GSUB") == {"ccmp"}
 
     axes = {axis.axisTag: axis for axis in font["fvar"].axes}
     weight = axes["wght"]
     assert (weight.minValue, weight.defaultValue, weight.maxValue) == (100, 500, 700)
+    instance_names = [font["name"].getDebugName(instance.subfamilyNameID) for instance in font["fvar"].instances]
+    assert instance_names == ["Fine", "Signature", "Regular", "Dense", "Bold", "Structural"], instance_names
+    stat_names = [
+        font["name"].getDebugName(value.ValueNameID)
+        for value in font["STAT"].table.AxisValueArray.AxisValue
+    ]
+    assert stat_names == ["Fine", "Signature", "Regular", "Dense", "Bold", "Structural"], stat_names
 
-    structural = instantiateVariableFont(TTFont(VARIABLE), {"wght": 700}, inplace=True)
-    structural_cmap = structural.getBestCmap()
-    structural_m = structural["glyf"][structural_cmap[ord("M")]]
-    structural_m_coordinates = list(structural_m.coordinates)
-    assert structural_m_coordinates[0][1] == 0
-    assert structural_m_coordinates[1][1] >= 200
-    assert structural_m_coordinates[5][1] >= 200
+    os2 = font["OS/2"]
+    assert os2.version >= 4
+    assert os2.fsType == 0
+    assert (os2.sxHeight, os2.sCapHeight) == (520, 720)
+    assert (os2.sTypoAscender, os2.sTypoDescender) == (900, -260)
+    assert any(vars(os2.panose).values())
+    assert font["gasp"].gaspRange == {65535: 0x000F}
+    assert bytes(font["prep"].program.getBytecode()) == bytes([0xB8, 0x01, 0xFF, 0x85, 0xB0, 0x04, 0x8D])
+    assert abs(font["head"].fontRevision - 0.7) < 0.001
+
+    family_names = {record.toUnicode() for record in font["name"].names if record.nameID in {1, 16}}
+    assert family_names == {"Strawn"}
+    assert not any("Moriatz Sans" in record.toUnicode() for record in font["name"].names)
+    assert f"Version {VERSION}" in {record.toUnicode() for record in font["name"].names if record.nameID == 5}
 
     cmap = font.getBestCmap()
-    for character in "Moriatz LabsABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?@#%&·–—":
-        assert ord(character) in cmap, f"Missing character: {character!r}"
-
-    family_names = {
-        record.toUnicode()
-        for record in font["name"].names
-        if record.nameID == 1
+    expected_codepoints = {
+        int(item["codepoint"].removeprefix("U+"), 16)
+        for item in charset_manifest["characters"]
     }
-    assert "Strawn" in family_names
-    version_names = {record.toUnicode() for record in font["name"].names if record.nameID == 5}
-    assert "Version 0.6.1" in version_names
+    assert set(cmap) == expected_codepoints
+    assert len(cmap) == 319
 
-    regular = TTFont(REGULAR)
-    regular_cmap = regular.getBestCmap()
-    glyf = regular["glyf"]
-    for character in "ABCDEFGHIJKLMNOPRSTUVWXYZ":
-        glyph = glyf[regular_cmap[ord(character)]]
+    dense = TTFont(STATICS[500])
+    dense_cmap = dense.getBestCmap()
+    glyf = dense["glyf"]
+    for character in "ABDEHIKLMNPRTUVWXZ":
+        glyph = glyf[dense_cmap[ord(character)]]
         assert (glyph.yMin, glyph.yMax) == (0, 720), (character, glyph.yMin, glyph.yMax)
-    assert (glyf[regular_cmap[ord("Q")]].yMin, glyf[regular_cmap[ord("Q")]].yMax) == (-220, 720)
-    for character in "acemnorsuvwxz":
-        glyph = glyf[regular_cmap[ord(character)]]
-        assert (glyph.yMin, glyph.yMax) == (0, 520), (character, glyph.yMin, glyph.yMax)
-    for character in "bdfhkl":
-        glyph = glyf[regular_cmap[ord(character)]]
-        assert (glyph.yMin, glyph.yMax) == (0, 720), (character, glyph.yMin, glyph.yMax)
-    for character in "gpqy":
-        glyph = glyf[regular_cmap[ord(character)]]
-        assert (glyph.yMin, glyph.yMax) == (-220, 520), (character, glyph.yMin, glyph.yMax)
-    assert (glyf[regular_cmap[ord("i")]].yMin, glyf[regular_cmap[ord("i")]].yMax) == (0, 620)
-    assert (glyf[regular_cmap[ord("j")]].yMin, glyf[regular_cmap[ord("j")]].yMax) == (-220, 620)
-    assert (glyf[regular_cmap[ord("t")]].yMin, glyf[regular_cmap[ord("t")]].yMax) == (0, 610)
-    h_glyph = glyf[regular_cmap[ord("h")]]
-    n_glyph = glyf[regular_cmap[ord("n")]]
-    assert h_glyph.yMax - n_glyph.yMax >= 200, (h_glyph.yMax, n_glyph.yMax)
-    k_glyph = glyf[regular_cmap[ord("k")]]
-    assert max(y for x, y in k_glyph.coordinates if x > 250) < 600
-    for character in "bhp":
-        glyph = glyf[regular_cmap[ord(character)]]
-        assert max(y for x, y in glyph.coordinates if x > 250) < 500, character
-    for character in "dq":
-        glyph = glyf[regular_cmap[ord(character)]]
-        assert max(y for x, y in glyph.coordinates if x < 350) < 500, character
-    for character in "0123456789":
-        glyph = glyf[regular_cmap[ord(character)]]
-        assert (glyph.yMin, glyph.yMax) == (0, 720), (character, glyph.yMin, glyph.yMax)
+    for character in "CGOØ":
+        glyph = glyf[dense_cmap[ord(character)]]
+        assert (glyph.yMin, glyph.yMax) == (-12, 732), (character, glyph.yMin, glyph.yMax)
+    for character in "aceosø":
+        glyph = glyf[dense_cmap[ord(character)]]
+        assert (glyph.yMin, glyph.yMax) == (-10, 530), (character, glyph.yMin, glyph.yMax)
+    for character in "bdhpq":
+        glyph = glyf[dense_cmap[ord(character)]]
+        expected_top = 720 if character in "bdh" else 520
+        expected_bottom = -220 if character in "pq" else 0
+        assert (glyph.yMin, glyph.yMax) == (expected_bottom, expected_top), (character, glyph.yMin, glyph.yMax)
 
-    horizontal_metrics = regular["hmtx"].metrics
-    for character in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":
-        glyph_name = regular_cmap[ord(character)]
-        glyph = glyf[glyph_name]
-        advance, left_side_bearing = horizontal_metrics[glyph_name]
-        right_side_bearing = advance - glyph.xMax
-        assert abs(left_side_bearing - right_side_bearing) <= 1, (
-            character,
-            left_side_bearing,
-            right_side_bearing,
-        )
+    advances_by_weight = {}
     for axis_weight in (100, 300, 500, 700):
         instance = instantiateVariableFont(TTFont(VARIABLE), {"wght": axis_weight}, inplace=True)
         instance_cmap = instance.getBestCmap()
-        instance_sidebearings = [instance["hmtx"].metrics[instance_cmap[ord(character)]][1] for character in "Trt"]
-        assert instance_sidebearings == [40, 40, 40], (axis_weight, instance_sidebearings)
-    print("Strawn quality checks passed.")
+        advances_by_weight[axis_weight] = {
+            codepoint: instance["hmtx"].metrics[name][0]
+            for codepoint, name in instance_cmap.items()
+        }
+    assert len({tuple(sorted(advances.items())) for advances in advances_by_weight.values()}) == 1
+
+    expected_kerned_pairs = [
+        "AV", "AW", "AT", "FA", "LT", "PA", "TA", "To", "Te", "Ty",
+        "Tr", "Va", "Wa", "Yo", "rt", "ry",
+    ]
+    for pair in expected_kerned_pairs:
+        assert shaped_advance(pair, kern=True) < shaped_advance(pair, kern=False), pair
+
+    for sample in (
+        "Árvíztűrő tükörfúrógép",
+        "Pchnąć w tę łódź jeża lub ośm skrzyń fig",
+        "Strawn — 100 € ™ ©",
+        "A\u0301 E\u0328 o\u0308",
+    ):
+        shaped_advance(sample, kern=True)
+
+    for name in font.getGlyphOrder():
+        glyph = font["glyf"][name]
+        if glyph.numberOfContours > 0:
+            assert glyph.flags[0] & flagOverlapSimple, name
+
+    assert_bounds_cover_all_instances(font)
+    print("Strawn v0.7 quality checks passed.")
 
 
 if __name__ == "__main__":

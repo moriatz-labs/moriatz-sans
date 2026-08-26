@@ -21,4 +21,4 @@ Strawn is Moriatz Labs' canonical variable system typeface.
 
 - Font software and sources remain under OFL-1.1.
 - Tag releases with semantic versions.
-- Attach the variable TTF, variable WOFF2, Regular TTF, and Moriatz Labs proof to each GitHub release.
+- Attach the variable TTF, variable WOFF2, Fine, Signature, Dense, and Structural TTFs, manifests, and Moriatz Labs proof to each GitHub release.
