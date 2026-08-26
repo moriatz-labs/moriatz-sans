@@ -1,0 +1,44 @@
+{
+  "family": "Strawn",
+  "version": "0.7.0",
+  "unitsPerEm": 1000,
+  "capHeight": 720,
+  "xHeight": 520,
+  "ascenderHeight": 720,
+  "descenderHeight": -220,
+  "typographicAscent": 900,
+  "typographicDescent": -260,
+  "weightAxis": {
+    "minimum": 100,
+    "default": 500,
+    "maximum": 700
+  },
+  "instances": [
+    {
+      "weight": 100,
+      "name": "Fine"
+    },
+    {
+      "weight": 300,
+      "name": "Signature"
+    },
+    {
+      "weight": 500,
+      "name": "Dense"
+    },
+    {
+      "weight": 700,
+      "name": "Structural"
+    }
+  ],
+  "opticalZones": {
+    "capRound": [
+      -12,
+      732
+    ],
+    "lowercaseRound": [
+      -10,
+      530
+    ]
+  }
+}
